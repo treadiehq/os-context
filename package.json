@@ -8,7 +8,7 @@
     "context": "dist/index.js",
     "os-context": "dist/index.js"
   },
-  "files": ["dist"],
+  "files": ["dist", "openclaw-skill"],
   "scripts": {
     "build": "tsup src/index.ts --format esm --clean",
     "dev": "tsx src/index.ts",

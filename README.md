@@ -101,6 +101,18 @@ See [docs/permissions.md](docs/permissions.md) for details and troubleshooting.
 
 See [docs/schema.md](docs/schema.md) for the full JSON schema. Top-level keys include `schema_version`, `generated_at`, `host`, `frontmost`, optional `apps`, `clipboard`, `battery`, `network`, `calendar`, `reminders`, `permissions`, `warnings`, `errors`, and optionally `_debug`.
 
+## OpenClaw skill
+
+An [OpenClaw](https://github.com/openclaw/openclaw) skill is included so the agent can fetch machine context when needed. OpenClaw loads skills as directories named after the skill containing `SKILL.md` (see [Skills](https://docs.openclaw.ai/tools/skills)).
+
+**Install the skill:**
+
+- **Managed (shared):** `mkdir -p ~/.openclaw/skills/os-context && cp openclaw-skill/SKILL.md ~/.openclaw/skills/os-context/`
+- **Workspace (per-agent):** from your OpenClaw workspace, `mkdir -p skills/os-context && cp /path/to/os-context/openclaw-skill/SKILL.md skills/os-context/`
+- **ClawHub:** if published on [ClawHub](https://clawhub.com), from your workspace run `clawhub install <slug>`.
+
+The skill teaches the agent to run `npx os-context` (or `context` if installed globally) with appropriate flags and use the JSON to answer questions about what you're doing, battery, calendar, reminders, etc.
+
 ## Development
 
 ```bash
