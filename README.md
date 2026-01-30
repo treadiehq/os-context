@@ -10,7 +10,7 @@ os-context gives AI agents a quick, local snapshot of your machine (app, window,
 - **Fast**: Target &lt;300ms typical; local-only, no external network.
 - **Read-only**: No daemon, no always-on logging.
 - **Privacy**: No screenshots, keystrokes, microphone/camera, or recording.
-- **Clear permissions**: Only request macOS permissions when you use the matching `--include-*` flag.
+- **Clear permissions**: Only request macOS permissions when you use the matching flag (e.g. `--frontmost-window`, `--calendar`).
 - **Feature flags**: Sensitive data (clipboard, window title, calendar, reminders) is opt-in.
 
 ## Install
@@ -32,14 +32,14 @@ os-context
 **Pretty-print with frontmost window and clipboard, redact sensitive fields:**
 
 ```bash
-os-context --pretty --include-frontmost-window --include-clipboard --redact
+os-context --pretty --frontmost-window --clipboard --redact
 ```
 
 **All optional features and debug timings:**
 
 ```bash
-os-context --pretty --include-clipboard --include-frontmost-window --include-apps \
-  --include-battery --include-network --include-calendar --include-reminders \
+os-context --pretty --clipboard --frontmost-window --apps \
+  --battery --network --calendar --reminders \
   --redact --debug
 ```
 
@@ -48,13 +48,13 @@ os-context --pretty --include-clipboard --include-frontmost-window --include-app
 | Flag | Description |
 |------|-------------|
 | `--pretty` | Pretty-print JSON. |
-| `--include-clipboard` | Include clipboard text (and types). |
-| `--include-frontmost-window` | Include frontmost window title (requires Accessibility). |
-| `--include-apps` | Include list of running apps (name, bundle_id, pid). |
-| `--include-battery` | Include battery percentage and charging state. |
-| `--include-network` | Include primary interface, SSID, local reachability. |
-| `--include-calendar` | Include next calendar events (requires Calendar permission). |
-| `--include-reminders` | Include reminders (requires Reminders permission). |
+| `--clipboard` | Include clipboard text (and types). |
+| `--frontmost-window` | Include frontmost window title (requires Accessibility). |
+| `--apps` | Include list of running apps (name, bundle_id, pid). |
+| `--battery` | Include battery percentage and charging state. |
+| `--network` | Include primary interface, SSID, local reachability. |
+| `--calendar` | Include next calendar events (requires Calendar permission). |
+| `--reminders` | Include reminders (requires Reminders permission). |
 | `--redact` | Redact sensitive strings; output SHA-256 + length only. |
 | `--timeout-ms <n>` | Per-module timeout in ms (default 250). |
 | `--debug` | Include per-module timings in `_debug.timings_ms`. |
@@ -77,8 +77,8 @@ JSON is always printed, even when exit code is non-zero.
 ## Permissions
 
 - **Default run** does not require Accessibility, Calendar, or Reminders. It only reads OS version, machine, locale, timezone, and frontmost app name/bundle ID.
-- **Accessibility** (macOS) is only needed for `--include-frontmost-window` (to read window titles).
-- **Calendar / Reminders** (macOS) are only used when you pass `--include-calendar` or `--include-reminders`.
+- **Accessibility** (macOS) is only needed for `--frontmost-window` (to read window titles).
+- **Calendar / Reminders** (macOS) are only used when you pass `--calendar` or `--reminders`.
 
 See [docs/permissions.md](docs/permissions.md) for details and troubleshooting.
 

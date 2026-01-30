@@ -10,12 +10,12 @@ The CLI prints a single JSON object to stdout. All fields are optional except `s
 | `generated_at` | string | ISO8601 timestamp when the output was generated. |
 | `host` | object | OS, version, machine, locale, timezone. Always present when host module succeeds. |
 | `frontmost` | object | Frontmost app name, bundle id; optionally window title (or redacted). |
-| `apps` | array | List of running apps (name, bundle_id, pid). Only with `--include-apps`. |
-| `clipboard` | object | Clipboard availability, types, and optionally text (or redacted). Only with `--include-clipboard`. |
-| `battery` | object | Percentage, charging state, power source. Only with `--include-battery`. |
-| `network` | object | Primary interface, SSID, local reachability. Only with `--include-network`. |
-| `calendar` | array | Next calendar events. Only with `--include-calendar`. |
-| `reminders` | array | Incomplete reminders. Only with `--include-reminders`. |
+| `apps` | array | List of running apps (name, bundle_id, pid). Only with `--apps`. |
+| `clipboard` | object | Clipboard availability, types, and optionally text (or redacted). Only with `--clipboard`. |
+| `battery` | object | Percentage, charging state, power source. Only with `--battery`. |
+| `network` | object | Primary interface, SSID, local reachability. Only with `--network`. |
+| `calendar` | array | Next calendar events. Only with `--calendar`. |
+| `reminders` | array | Incomplete reminders. Only with `--reminders`. |
 | `permissions` | object | Best-effort accessibility, calendar, reminders permission state. |
 | `warnings` | array | Non-fatal warnings from collectors. |
 | `errors` | array | Per-module errors (module, message, code). |

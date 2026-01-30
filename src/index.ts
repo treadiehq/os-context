@@ -39,16 +39,16 @@ function parseArgs(): CollectOptions {
         "Sensitive data (clipboard, window title, calendar, reminders) is opt-in via flags."
     )
     .option("--pretty", "Pretty-print JSON")
-    .option("--include-clipboard", "Include clipboard text (may prompt for pasteboard access)")
+    .option("--clipboard", "Include clipboard text (may prompt for pasteboard access)")
     .option(
-      "--include-frontmost-window",
+      "--frontmost-window",
       "Include frontmost window title (requires Accessibility permission)"
     )
-    .option("--include-apps", "Include list of running apps (name, bundle_id, pid)")
-    .option("--include-battery", "Include battery percentage and charging state")
-    .option("--include-network", "Include primary interface, SSID, local reachability")
-    .option("--include-calendar", "Include next calendar events (requires Calendar permission)")
-    .option("--include-reminders", "Include reminders (requires Reminders permission)")
+    .option("--apps", "Include list of running apps (name, bundle_id, pid)")
+    .option("--battery", "Include battery percentage and charging state")
+    .option("--network", "Include primary interface, SSID, local reachability")
+    .option("--calendar", "Include next calendar events (requires Calendar permission)")
+    .option("--reminders", "Include reminders (requires Reminders permission)")
     .option(
       "--redact",
       "Redact sensitive string fields (clipboard, window title, event/reminder titles); output sha256 + length"
@@ -61,8 +61,8 @@ function parseArgs(): CollectOptions {
 Privacy & permissions:
   By default, os-context only reads safe system info (OS, machine, locale, frontmost app name).
   It does NOT read clipboard, window titles, calendar, or reminders unless you pass the
-  corresponding --include-* flag. Accessibility is only required for --include-frontmost-window.
-  Calendar/Reminders permissions are only requested when --include-calendar or --include-reminders
+  corresponding flag (--clipboard, --frontmost-window, etc.). Accessibility is only required for --frontmost-window.
+  Calendar/Reminders permissions are only requested when --calendar or --reminders
   is used. No screenshots, keystrokes, or recording of any kind.
 `
     );
@@ -70,13 +70,13 @@ Privacy & permissions:
   const opts = program.opts();
   return {
     pretty: opts.pretty ?? false,
-    includeClipboard: opts.includeClipboard ?? false,
-    includeFrontmostWindow: opts.includeFrontmostWindow ?? false,
-    includeApps: opts.includeApps ?? false,
-    includeBattery: opts.includeBattery ?? false,
-    includeNetwork: opts.includeNetwork ?? false,
-    includeCalendar: opts.includeCalendar ?? false,
-    includeReminders: opts.includeReminders ?? false,
+    includeClipboard: opts.clipboard ?? false,
+    includeFrontmostWindow: opts.frontmostWindow ?? false,
+    includeApps: opts.apps ?? false,
+    includeBattery: opts.battery ?? false,
+    includeNetwork: opts.network ?? false,
+    includeCalendar: opts.calendar ?? false,
+    includeReminders: opts.reminders ?? false,
     redact: opts.redact ?? false,
     timeoutMs: opts.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     debug: opts.debug ?? false,
