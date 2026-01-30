@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Initial release.
-- CLI `os-context` with commander: `--pretty`, `--clipboard`, `--frontmost-window`, `--apps`, `--battery`, `--network`, `--calendar`, `--reminders`, `--redact`, `--timeout-ms`, `--debug`.
+- CLI `context` (product: os-context) with commander: `--pretty`, `--clipboard`, `--frontmost-window`, `--apps`, `--battery`, `--network`, `--calendar`, `--reminders`, `--redact`, `--timeout-ms`, `--debug`.
 - Output JSON with `schema_version`, `generated_at`, `permissions`, and optional `host`, `frontmost`, `apps`, `clipboard`, `battery`, `network`, `calendar`, `reminders`, `warnings`, `errors`, `_debug`.
 - **host** module: OS version, machine, locale, timezone (safe default).
 - **frontmost** module: frontmost app name and bundle ID; optional window title with `--frontmost-window` and Accessibility permission handling.

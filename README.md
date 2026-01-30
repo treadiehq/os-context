@@ -1,12 +1,12 @@
-# os-context
+# OS Context
 
 A fast macOS & Linux CLI that prints a single JSON object describing your current local context for agents. Privacy-respecting, read-only, no network calls to external services.
 
-os-context gives AI agents a quick, local snapshot of your machine (app, window, clipboard, battery, network, etc.) so they can give context-aware answers without screenshots or daemons. Sensitive data is opt-in; default output is minimal and private.
+OS Context gives AI agents a quick, local snapshot of your machine (app, window, clipboard, battery, network, etc.) so they can give context-aware answers without screenshots or daemons. Sensitive data is opt-in; default output is minimal and private.
 
 ## Goals
 
-- **Single command**: `os-context` outputs JSON to stdout.
+- **Single command**: `context` outputs JSON to stdout.
 - **Fast**: Target &lt;300ms typical; local-only, no external network.
 - **Read-only**: No daemon, no always-on logging.
 - **Privacy**: No screenshots, keystrokes, microphone/camera, or recording.
@@ -26,19 +26,19 @@ npm run build
 **Default (safe core context only):**
 
 ```bash
-os-context
+context
 ```
 
 **Pretty-print with frontmost window and clipboard, redact sensitive fields:**
 
 ```bash
-os-context --pretty --frontmost-window --clipboard --redact
+context --pretty --frontmost-window --clipboard --redact
 ```
 
 **All optional features and debug timings:**
 
 ```bash
-os-context --pretty --clipboard --frontmost-window --apps \
+context --pretty --clipboard --frontmost-window --apps \
   --battery --network --calendar --reminders \
   --redact --debug
 ```

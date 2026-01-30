@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "os-context": "dist/index.js"
+    "context": "dist/index.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --clean",

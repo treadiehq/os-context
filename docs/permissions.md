@@ -4,7 +4,7 @@ os-context is read-only and only uses macOS APIs that may require permission whe
 
 ## Default run (no extra permissions)
 
-Running `os-context` with no flags only reads:
+Running `context` with no flags only reads:
 
 - System version and machine (e.g. `sw_vers`, `uname`)
 - Locale and timezone (Node `Intl` or system)
@@ -26,7 +26,7 @@ On most macOS setups this does **not** trigger any permission prompts. If your s
 
 ## Exit code 2 (permission missing)
 
-If you use `--frontmost-window`, `--calendar`, or `--reminders` and the required permission is denied, os-context will:
+If you use `--frontmost-window`, `--calendar`, or `--reminders` and the required permission is denied, context will:
 
 - Still print valid JSON.
 - Set `permissions.accessibility` or `permissions.calendar` / `permissions.reminders` to `"denied"`.
@@ -39,8 +39,8 @@ Grant the required permission in System Settings and run again.
 
 1. Open **System Settings → Privacy & Security → Accessibility**.
 2. Add your terminal app (Terminal, iTerm, Cursor, etc.) or the `node` binary if you run via `node dist/index.js`.
-3. If you use `os-context` as a global CLI (`npm i -g` or `npx`), add **Terminal** (or the app that runs the script).
+3. If you use `context` as a global CLI (`npm i -g` or `npx`), add **Terminal** (or the app that runs the script).
 4. Restart the terminal after changing the list.
-5. Run again: `os-context --frontmost-window`.
+5. Run again: `context --frontmost-window`.
 
 If permission is still denied, the JSON will contain `permissions.accessibility: "denied"` and an error entry; no window title will be included.

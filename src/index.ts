@@ -32,7 +32,7 @@ const DEFAULT_TIMEOUT_MS = 250;
 function parseArgs(): CollectOptions {
   const program = new Command();
   program
-    .name("os-context")
+    .name("context")
     .description(
       "Print a single JSON object describing your current local context (for agents). " +
         "Supports macOS and Linux. Privacy-respecting, read-only, no network calls to external services. " +
@@ -59,7 +59,7 @@ function parseArgs(): CollectOptions {
       "after",
       `
 Privacy & permissions:
-  By default, os-context only reads safe system info (OS, machine, locale, frontmost app name).
+  By default, context only reads safe system info (OS, machine, locale, frontmost app name).
   It does NOT read clipboard, window titles, calendar, or reminders unless you pass the
   corresponding flag (--clipboard, --frontmost-window, etc.). Accessibility is only required for --frontmost-window.
   Calendar/Reminders permissions are only requested when --calendar or --reminders
