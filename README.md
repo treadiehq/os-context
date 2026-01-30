@@ -15,10 +15,24 @@ OS Context gives AI agents a quick, local snapshot of your machine (app, window,
 
 ## Install
 
+**Run without installing (npx):**
 ```bash
-npm install
-npm run build
-# Or link globally: npm link
+npx os-context --pretty
+```
+Use the package name `os-context` with npx; the command is then `context` inside the package.
+
+**Install globally (get `context` in your PATH):**
+```bash
+npm i -g os-context
+context --pretty
+```
+
+**From source:**
+```bash
+git clone https://github.com/treadiehq/os-context.git && cd os-context
+npm install && npm run build
+./node_modules/.bin/context --pretty
+# or: npm link  then  context --pretty
 ```
 
 ## Usage
@@ -26,19 +40,20 @@ npm run build
 **Default (safe core context only):**
 
 ```bash
-context
+npx os-context
+# or, after global install:  context
 ```
 
 **Pretty-print with frontmost window and clipboard, redact sensitive fields:**
 
 ```bash
-context --pretty --frontmost-window --clipboard --redact
+npx os-context --pretty --frontmost-window --clipboard --redact
 ```
 
 **All optional features and debug timings:**
 
 ```bash
-context --pretty --clipboard --frontmost-window --apps \
+npx os-context --pretty --clipboard --frontmost-window --apps \
   --battery --network --calendar --reminders \
   --redact --debug
 ```

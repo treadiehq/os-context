@@ -1,15 +1,43 @@
+import { run } from "../util/exec.js";
 import { readFile } from "node:fs/promises";
 import { timer } from "../util/time.js";
 import { getPlatform } from "../util/platform.js";
 import type { Battery } from "../schema.js";
 import type { ModuleResult } from "../schema.js";
 
-async function collectBatteryDarwin(_timeoutMs: number): Promise<ModuleResult<Battery>> {
-  // TODO: pmset -g batt
-  return {
-    data: { percentage: 0, is_charging: false, power_source: "unknown" },
-    timingMs: 0,
-  };
+function parsePmsetBatt(stdout: string): { percentage: number; is_charging: boolean; power_source: "ac" | "battery" | "unknown" } {
+  const line = stdout.split("\n").find((l) => l.includes("%") || l.includes("InternalBattery"));
+  const pctMatch = stdout.match(/(\d+)%/);
+  const percentage = pctMatch ? Math.min(1, Math.max(0, parseInt(pctMatch[1], 10) / 100)) : 0;
+  const lower = stdout.toLowerCase();
+  const is_charging = lower.includes("charging") || lower.includes("charged");
+  let power_source: "ac" | "battery" | "unknown" = "unknown";
+  if (lower.includes("ac power") || lower.includes("charging") || lower.includes("charged")) {
+    power_source = "ac";
+  } else if (lower.includes("battery power") || lower.includes("discharging")) {
+    power_source = "battery";
+  }
+  return { percentage, is_charging, power_source };
+}
+
+async function collectBatteryDarwin(timeoutMs: number): Promise<ModuleResult<Battery>> {
+  const t = timer();
+  try {
+    const result = await run("pmset", ["-g", "batt"], { timeoutMs });
+    if (result.timedOut || !result.ok) {
+      return {
+        data: { percentage: 0, is_charging: false, power_source: "unknown" },
+        timingMs: t.elapsed(),
+      };
+    }
+    const data = parsePmsetBatt(result.stdout);
+    return { data, timingMs: t.elapsed() };
+  } catch {
+    return {
+      data: { percentage: 0, is_charging: false, power_source: "unknown" },
+      timingMs: t.elapsed(),
+    };
+  }
 }
 
 async function collectBatteryLinux(_timeoutMs: number): Promise<ModuleResult<Battery>> {

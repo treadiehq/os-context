@@ -60,14 +60,20 @@ export type Network = z.infer<typeof NetworkSchema>;
 export const CalendarEventSchema = z.object({
   start: z.string(),
   end: z.string(),
-  title: z.string(),
+  title: z.string().optional(),
+  title_sha256: z.string().optional(),
+  title_length: z.number().optional(),
   location: z.string().optional(),
+  location_sha256: z.string().optional(),
+  location_length: z.number().optional(),
 });
 export type CalendarEvent = z.infer<typeof CalendarEventSchema>;
 
 // --- Reminders ---
 export const ReminderSchema = z.object({
-  title: z.string(),
+  title: z.string().optional(),
+  title_sha256: z.string().optional(),
+  title_length: z.number().optional(),
   due: z.string().optional(),
   list: z.string().optional(),
 });
