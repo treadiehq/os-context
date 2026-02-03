@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
 
 /**
- * SHA-256 hex digest of UTF-8 string. Empty string -> hash of "".
+ * SHA-256 hex digest of UTF-16LE string. Empty string -> hash of "".
  */
 export function sha256(text: string): string {
-  return createHash("sha256").update(text, "utf8").digest("hex");
+  return createHash("sha256").update(text, "utf16le").digest("hex");
 }
 
 /**

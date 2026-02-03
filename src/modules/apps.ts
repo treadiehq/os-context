@@ -75,14 +75,15 @@ async function collectAppsLinux(timeoutMs: number): Promise<ModuleResult<AppEntr
         timingMs: t.elapsed(),
       };
     }
-    const lines = result.stdout.trim().split("\n").filter(Boolean).slice(0, MAX_APPS);
+    const lines = result.stdout.trim().split("\n").filter(Boolean);
     const apps: AppEntry[] = lines.map((line) => {
       const match = line.trim().match(/^\s*(\d+)\s+(.+)$/);
       const pid = match ? parseInt(match[1], 10) : 0;
       const name = match ? match[2].trim() || "unknown" : "unknown";
       return { name, bundle_id: name, pid: Number.isNaN(pid) ? 0 : pid };
     }).filter((a) => a.pid > 0);
-    return { data: apps, timingMs: t.elapsed() };
+    apps.sort((a, b) => b.pid - a.pid);
+    return { data: apps.slice(0, MAX_APPS), timingMs: t.elapsed() };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {

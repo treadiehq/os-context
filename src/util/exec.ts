@@ -21,7 +21,7 @@ export async function run(
     return {
       stdout: result.stdout ?? "",
       stderr: result.stderr ?? "",
-      ok: result.exitCode === 0,
+      ok: !result.failed,
       timedOut: result.timedOut,
     };
   } catch (err) {

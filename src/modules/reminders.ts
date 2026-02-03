@@ -33,7 +33,7 @@ tell application "Reminders"
   set count to 0
   repeat with aList in lists
     try
-      set theReminders to (every reminder of aList whose completed is false and (due date is not missing value) and (due date >= startDate) and (due date <= endDate))
+      set theReminders to (every reminder of aList whose completed is false and (due date is not missing value) and (due date <= endDate))
       repeat with r in theReminders
         if count >= 10 then exit repeat
         set titleStr to (name of r as string)

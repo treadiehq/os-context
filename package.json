@@ -1,6 +1,6 @@
 {
   "name": "os-context",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Fast macOS & Linux CLI that prints a single JSON object describing your current local context for agents",
   "type": "module",
   "main": "dist/index.js",

@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import { sha256, redactString } from "./redact.js";
 
 describe("sha256", () => {
-  it("returns hex digest of UTF-8 string", () => {
+  it("returns hex digest of UTF-16LE string", () => {
     const out = sha256("hello");
     expect(out).toMatch(/^[a-f0-9]{64}$/);
     expect(out).toBe(
-      "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+      "06e44dc1b95c469f43aaccb49e93c36827626266eed5575eced74af9a016c9cd"
     );
   });
 

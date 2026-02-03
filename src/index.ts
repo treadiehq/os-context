@@ -134,6 +134,7 @@ export async function collectAll(options: CollectOptions): Promise<{ output: Out
     if (appsResult.error) {
       addError("apps", appsResult.error.message, appsResult.error.code);
       if (appsResult.error.code === "timeout") setExit(3);
+      else setExit(4);
     }
     if (appsResult.warnings) warnings.push(...appsResult.warnings);
   }
@@ -146,6 +147,7 @@ export async function collectAll(options: CollectOptions): Promise<{ output: Out
     if (clipboardResult.error) {
       addError("clipboard", clipboardResult.error.message, clipboardResult.error.code);
       if (clipboardResult.error.code === "timeout") setExit(3);
+      else setExit(4);
     }
     if (clipboardResult.warnings) warnings.push(...clipboardResult.warnings);
   }
@@ -158,6 +160,7 @@ export async function collectAll(options: CollectOptions): Promise<{ output: Out
     if (batteryResult.error) {
       addError("battery", batteryResult.error.message, batteryResult.error.code);
       if (batteryResult.error.code === "timeout") setExit(3);
+      else setExit(4);
     }
     if (batteryResult.warnings) warnings.push(...batteryResult.warnings);
   }
@@ -170,6 +173,7 @@ export async function collectAll(options: CollectOptions): Promise<{ output: Out
     if (networkResult.error) {
       addError("network", networkResult.error.message, networkResult.error.code);
       if (networkResult.error.code === "timeout") setExit(3);
+      else setExit(4);
     }
     if (networkResult.warnings) warnings.push(...networkResult.warnings);
   }

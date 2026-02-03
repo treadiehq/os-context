@@ -40,9 +40,21 @@ async function collectNetworkLinux(timeoutMs: number): Promise<ModuleResult<Netw
   const t = timer();
   try {
     const routeResult = await run("ip", ["route", "show", "default"], { timeoutMs });
-    const defaultLine = routeResult.ok ? routeResult.stdout.trim().split("\n")[0] : "";
-    const match = defaultLine.match(/dev\s+(\S+)/);
-    const primary_interface = match ? match[1] : "";
+    const defaultLines = routeResult.ok
+      ? routeResult.stdout.split("\n").map((line) => line.trim()).filter(Boolean)
+      : [];
+    let primary_interface = "";
+    let bestMetric = Number.POSITIVE_INFINITY;
+    for (const line of defaultLines) {
+      const devMatch = line.match(/dev\s+(\S+)/);
+      if (!devMatch) continue;
+      const metricMatch = line.match(/metric\s+(\d+)/);
+      const metric = metricMatch ? Number(metricMatch[1]) : 0;
+      if (metric < bestMetric) {
+        bestMetric = metric;
+        primary_interface = devMatch[1];
+      }
+    }
 
     let ssid: string | undefined;
     if (primary_interface) {

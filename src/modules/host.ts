@@ -22,13 +22,13 @@ async function collectHostDarwin(timeoutMs: number): Promise<ModuleResult<Host>>
     const os_version = osVersion.ok ? osVersion.stdout.trim() || "unknown" : "unknown";
     const machine_arch = machine.ok ? machine.stdout.trim() || "unknown" : "unknown";
     const locale =
-      typeof Intl !== "undefined" && Intl.DateTimeFormat
+      (typeof Intl !== "undefined" && Intl.DateTimeFormat
         ? new Intl.DateTimeFormat().resolvedOptions().locale
-        : "en-US";
+        : "en-US") || "en-US";
     const tz =
-      typeof Intl !== "undefined" && Intl.DateTimeFormat
+      (typeof Intl !== "undefined" && Intl.DateTimeFormat
         ? new Intl.DateTimeFormat().resolvedOptions().timeZone
-        : "UTC";
+        : "UTC") || "UTC";
     const data: Host = {
       os: "macos",
       os_version,
@@ -73,13 +73,13 @@ async function collectHostLinux(timeoutMs: number): Promise<ModuleResult<Host>> 
     const { version } = osRelease.ok ? parseOsRelease(osRelease.stdout) : { version: "unknown" };
     const machine_arch = machine.ok ? machine.stdout.trim() || "unknown" : "unknown";
     const locale =
-      typeof Intl !== "undefined" && Intl.DateTimeFormat
+      (typeof Intl !== "undefined" && Intl.DateTimeFormat
         ? new Intl.DateTimeFormat().resolvedOptions().locale
-        : "en-US";
+        : "en-US") || "en-US";
     const tz =
-      typeof Intl !== "undefined" && Intl.DateTimeFormat
+      (typeof Intl !== "undefined" && Intl.DateTimeFormat
         ? new Intl.DateTimeFormat().resolvedOptions().timeZone
-        : "UTC";
+        : "UTC") || "UTC";
     const data: Host = {
       os: "linux",
       os_version: version,

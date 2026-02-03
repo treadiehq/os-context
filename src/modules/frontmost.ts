@@ -64,6 +64,7 @@ async function collectFrontmostDarwin(options: CollectOptions): Promise<ModuleRe
     if (!appName) {
       return {
         data: { app_name: "Unknown", bundle_id: "unknown" },
+        permission: "granted" as PermissionState,
         timingMs: t.elapsed(),
       };
     }
@@ -114,6 +115,7 @@ async function collectFrontmostDarwin(options: CollectOptions): Promise<ModuleRe
 
     return {
       data: frontmost,
+      permission: "granted" as PermissionState,
       warnings: warnings.length ? warnings : undefined,
       timingMs: t.elapsed(),
     };
