@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { SCHEMA_VERSION, type Output, type StructuredError } from "./schema.js";
-import { createPermissionsState } from "./modules/permissions.js";
+import { createPermissionsState, updatePermission } from "./modules/permissions.js";
 import { collectHost } from "./modules/host.js";
 import { collectFrontmost } from "./modules/frontmost.js";
 import { collectApps } from "./modules/apps.js";
@@ -10,7 +10,6 @@ import { collectBattery } from "./modules/battery.js";
 import { collectNetwork } from "./modules/network.js";
 import { collectCalendar } from "./modules/calendar.js";
 import { collectReminders } from "./modules/reminders.js";
-import { updatePermission } from "./modules/permissions.js";
 import { stableStringify } from "./util/json.js";
 
 export interface CollectOptions {
@@ -53,7 +52,10 @@ function parseArgs(): CollectOptions {
       "--redact",
       "Redact sensitive string fields (clipboard, window title, event/reminder titles); output sha256 + length"
     )
-    .option("--timeout-ms <n>", "Per-module timeout in ms", (v) => parseInt(v, 10), DEFAULT_TIMEOUT_MS)
+    .option("--timeout-ms <n>", "Per-module timeout in ms", (v) => {
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) && n > 0 ? n : DEFAULT_TIMEOUT_MS;
+    }, DEFAULT_TIMEOUT_MS)
     .option("--debug", "Include per-module timings in JSON under _debug")
     .addHelpText(
       "after",
@@ -67,7 +69,19 @@ Privacy & permissions:
 `
     );
   program.parse();
-  const opts = program.opts();
+  const opts = program.opts<{
+    pretty?: boolean;
+    clipboard?: boolean;
+    frontmostWindow?: boolean;
+    apps?: boolean;
+    battery?: boolean;
+    network?: boolean;
+    calendar?: boolean;
+    reminders?: boolean;
+    redact?: boolean;
+    timeoutMs?: number;
+    debug?: boolean;
+  }>();
   return {
     pretty: opts.pretty ?? false,
     includeClipboard: opts.clipboard ?? false,
@@ -95,10 +109,15 @@ export async function collectAll(options: CollectOptions): Promise<{ output: Out
   function addError(module: string, message: string, code?: string): void {
     errors.push({ module, message, code });
   }
+  /**
+   * Set the process exit code with priority ordering.
+   * Higher-priority codes are never overwritten by lower-priority ones:
+   *   2 (permission denied)  >  3 (timeout)  >  4 (general error)  >  0 (success)
+   */
   function setExit(code: 2 | 3 | 4): void {
-    if (code === 2) exitCode = 2;
-    else if (code === 3 && exitCode !== 2) exitCode = 3;
-    else if (code === 4 && exitCode !== 2 && exitCode !== 3) exitCode = 4;
+    // Priority map: lower numeric value = higher priority
+    const priority: Record<ExitCode, number> = { 2: 0, 3: 1, 4: 2, 0: 3 };
+    if (priority[code] < priority[exitCode]) exitCode = code;
   }
   function recordTiming(name: string, ms: number): void {
     timingsMs[name] = ms;
@@ -126,99 +145,72 @@ export async function collectAll(options: CollectOptions): Promise<{ output: Out
   }
   if (frontmostResult.warnings) warnings.push(...frontmostResult.warnings);
 
-  // --- Apps (opt-in) ---
-  let appsResult: { data?: unknown; warnings?: string[]; error?: StructuredError; timingMs?: number } = {};
-  if (options.includeApps) {
-    appsResult = await collectApps(options.timeoutMs);
-    if (appsResult.timingMs != null) recordTiming("apps", appsResult.timingMs);
-    if (appsResult.error) {
-      addError("apps", appsResult.error.message, appsResult.error.code);
-      if (appsResult.error.code === "timeout") setExit(3);
-      else setExit(4);
-    }
-    if (appsResult.warnings) warnings.push(...appsResult.warnings);
+  // --- Opt-in collectors (run concurrently for lower total latency) ---
+  type SimpleResult = { data?: unknown; warnings?: string[]; error?: StructuredError; timingMs?: number };
+  type PermResult = SimpleResult & { permission?: import("./schema.js").PermissionState };
+
+  const [
+    appsSettled,
+    clipboardSettled,
+    batterySettled,
+    networkSettled,
+    calendarSettled,
+    remindersSettled,
+  ] = await Promise.allSettled([
+    options.includeApps      ? collectApps(options.timeoutMs)    : Promise.resolve(null),
+    options.includeClipboard ? collectClipboard(options)         : Promise.resolve(null),
+    options.includeBattery   ? collectBattery(options.timeoutMs) : Promise.resolve(null),
+    options.includeNetwork   ? collectNetwork(options.timeoutMs) : Promise.resolve(null),
+    options.includeCalendar  ? collectCalendar(options)          : Promise.resolve(null),
+    options.includeReminders ? collectReminders(options)         : Promise.resolve(null),
+  ]);
+
+  /** Extract value from a settled result, logging unexpected rejections. */
+  function unwrap<T>(settled: PromiseSettledResult<T | null>, module: string): T | null {
+    if (settled.status === "fulfilled") return settled.value;
+    addError(module, String(settled.reason));
+    setExit(4);
+    return null;
   }
 
-  // --- Clipboard (opt-in) ---
-  let clipboardResult: { data?: unknown; warnings?: string[]; error?: StructuredError; timingMs?: number } = {};
-  if (options.includeClipboard) {
-    clipboardResult = await collectClipboard(options);
-    if (clipboardResult.timingMs != null) recordTiming("clipboard", clipboardResult.timingMs);
-    if (clipboardResult.error) {
-      addError("clipboard", clipboardResult.error.message, clipboardResult.error.code);
-      if (clipboardResult.error.code === "timeout") setExit(3);
+  /** Process timing, errors, and warnings for a simple collector result. */
+  function processSimple(result: SimpleResult | null, name: string): SimpleResult {
+    if (!result) return {};
+    if (result.timingMs != null) recordTiming(name, result.timingMs);
+    if (result.error) {
+      addError(name, result.error.message, result.error.code);
+      if (result.error.code === "timeout") setExit(3);
       else setExit(4);
     }
-    if (clipboardResult.warnings) warnings.push(...clipboardResult.warnings);
+    if (result.warnings) warnings.push(...result.warnings);
+    return result;
   }
 
-  // --- Battery (opt-in) ---
-  let batteryResult: { data?: unknown; warnings?: string[]; error?: StructuredError; timingMs?: number } = {};
-  if (options.includeBattery) {
-    batteryResult = await collectBattery(options.timeoutMs);
-    if (batteryResult.timingMs != null) recordTiming("battery", batteryResult.timingMs);
-    if (batteryResult.error) {
-      addError("battery", batteryResult.error.message, batteryResult.error.code);
-      if (batteryResult.error.code === "timeout") setExit(3);
+  /** Process a collector result that may include permission info. */
+  function processPerm(
+    result: PermResult | null,
+    name: string,
+    permKey: "calendar" | "reminders",
+  ): PermResult {
+    if (!result) return {};
+    if (result.timingMs != null) recordTiming(name, result.timingMs);
+    if (result.permission) updatePermission(permissions, permKey, result.permission);
+    if (result.error) {
+      addError(name, result.error.message, result.error.code);
+      if (result.permission === "denied") setExit(2);
+      else if (result.error.code === "timeout") setExit(3);
       else setExit(4);
     }
-    if (batteryResult.warnings) warnings.push(...batteryResult.warnings);
+    if (result.warnings) warnings.push(...result.warnings);
+    return result;
   }
 
-  // --- Network (opt-in) ---
-  let networkResult: { data?: unknown; warnings?: string[]; error?: StructuredError; timingMs?: number } = {};
-  if (options.includeNetwork) {
-    networkResult = await collectNetwork(options.timeoutMs);
-    if (networkResult.timingMs != null) recordTiming("network", networkResult.timingMs);
-    if (networkResult.error) {
-      addError("network", networkResult.error.message, networkResult.error.code);
-      if (networkResult.error.code === "timeout") setExit(3);
-      else setExit(4);
-    }
-    if (networkResult.warnings) warnings.push(...networkResult.warnings);
-  }
-
-  // --- Calendar (opt-in) ---
-  let calendarResult: {
-    data?: unknown;
-    warnings?: string[];
-    error?: StructuredError;
-    permission?: import("./schema.js").PermissionState;
-    timingMs?: number;
-  } = {};
-  if (options.includeCalendar) {
-    calendarResult = await collectCalendar(options);
-    if (calendarResult.timingMs != null) recordTiming("calendar", calendarResult.timingMs);
-    if (calendarResult.permission) updatePermission(permissions, "calendar", calendarResult.permission);
-    if (calendarResult.error) {
-      addError("calendar", calendarResult.error.message, calendarResult.error.code);
-      if (calendarResult.permission === "denied") setExit(2);
-      else if (calendarResult.error.code === "timeout") setExit(3);
-      else setExit(4);
-    }
-    if (calendarResult.warnings) warnings.push(...calendarResult.warnings);
-  }
-
-  // --- Reminders (opt-in) ---
-  let remindersResult: {
-    data?: unknown;
-    warnings?: string[];
-    error?: StructuredError;
-    permission?: import("./schema.js").PermissionState;
-    timingMs?: number;
-  } = {};
-  if (options.includeReminders) {
-    remindersResult = await collectReminders(options);
-    if (remindersResult.timingMs != null) recordTiming("reminders", remindersResult.timingMs);
-    if (remindersResult.permission) updatePermission(permissions, "reminders", remindersResult.permission);
-    if (remindersResult.error) {
-      addError("reminders", remindersResult.error.message, remindersResult.error.code);
-      if (remindersResult.permission === "denied") setExit(2);
-      else if (remindersResult.error.code === "timeout") setExit(3);
-      else setExit(4);
-    }
-    if (remindersResult.warnings) warnings.push(...remindersResult.warnings);
-  }
+  const appsResult      = processSimple(unwrap<SimpleResult>(appsSettled, "apps"), "apps");
+  const clipboardResult = processSimple(unwrap<SimpleResult>(clipboardSettled, "clipboard"), "clipboard");
+  const batteryResult   = processSimple(unwrap<SimpleResult>(batterySettled, "battery"), "battery");
+  const networkResult   = processSimple(unwrap<SimpleResult>(networkSettled, "network"), "network");
+  const calendarResult  = processPerm(unwrap<PermResult>(calendarSettled, "calendar"), "calendar", "calendar");
+  const remindersResult = processPerm(unwrap<PermResult>(remindersSettled, "reminders"), "reminders", "reminders");
 
   const output: Output = {
     schema_version: SCHEMA_VERSION,
@@ -247,4 +239,7 @@ async function main(): Promise<void> {
   process.exit(exitCode);
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(4);
+});
