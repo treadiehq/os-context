@@ -64,19 +64,8 @@ async function collectNetworkLinux(timeoutMs: number): Promise<ModuleResult<Netw
 
     let has_internet = false;
     if (primary_interface) {
-      try {
-        const { readFile } = await import("node:fs/promises");
-        const operstate = await readFile(
-          `/sys/class/net/${primary_interface}/operstate`,
-          "utf8"
-        ).then((s) => s.trim()).catch(() => "");
-        if (operstate === "up") {
-          const addrResult = await run("ip", ["-4", "addr", "show", primary_interface], { timeoutMs });
-          has_internet = addrResult.ok && /inet\s+\d+\.\d+\.\d+\.\d+/.test(addrResult.stdout);
-        }
-      } catch {
-        // ignore
-      }
+      const addrResult = await run("ip", ["-4", "addr", "show", primary_interface], { timeoutMs });
+      has_internet = addrResult.ok && /inet\s+\d+\.\d+\.\d+\.\d+/.test(addrResult.stdout);
     }
 
     const data: Network = { primary_interface, ssid, has_internet };

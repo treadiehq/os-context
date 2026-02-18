@@ -61,17 +61,10 @@ async function collectFrontmostDarwin(options: CollectOptions): Promise<ModuleRe
     }
 
     const appName = nameResult.stdout.trim() || "Unknown";
-    if (!appName) {
-      return {
-        data: { app_name: "Unknown", bundle_id: "unknown" },
-        permission: "granted" as PermissionState,
-        timingMs: t.elapsed(),
-      };
-    }
 
     const idResult = await run("osascript", [
       "-e",
-      `id of application "${appName.replace(/"/g, '\\"')}"`,
+      `id of application "${appName.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`,
     ], { timeoutMs });
     const bundle_id = idResult.ok ? idResult.stdout.trim() || "unknown" : "unknown";
 
@@ -145,8 +138,21 @@ async function collectFrontmostLinux(options: CollectOptions): Promise<ModuleRes
 
     if (pidResult.timedOut) {
       return {
-        warnings: [...warnings, "frontmost: timeout"],
+        data: { app_name: "Unknown", bundle_id: "unknown" },
+        warnings: warnings.length ? warnings : undefined,
         error: { module: "frontmost", message: "Timeout", code: "timeout" },
+        timingMs: t.elapsed(),
+      };
+    }
+
+    if (!pidResult.ok) {
+      return {
+        data: { app_name: "Unknown", bundle_id: "unknown" },
+        error: {
+          module: "frontmost",
+          message: (pidResult.stderr ?? "").trim() || "xdotool not available or no X11 session (e.g. Wayland)",
+          code: "error",
+        },
         timingMs: t.elapsed(),
       };
     }
@@ -154,7 +160,7 @@ async function collectFrontmostLinux(options: CollectOptions): Promise<ModuleRes
     let appName = "Unknown";
     let bundle_id = "unknown";
 
-    if (pidResult.ok && pidResult.stdout.trim()) {
+    if (pidResult.stdout.trim()) {
       const pid = pidResult.stdout.trim();
       const commResult = await run("cat", [`/proc/${pid}/comm`], { timeoutMs });
       if (commResult.ok && commResult.stdout.trim()) {
@@ -175,8 +181,6 @@ async function collectFrontmostLinux(options: CollectOptions): Promise<ModuleRes
         frontmost.window_title = rawTitle;
         frontmost.window_title_length = rawTitle.length;
       }
-    } else if (includeWindow && !pidResult.ok) {
-      warnings.push("frontmost: xdotool not available or no X11 (e.g. Wayland); install xdotool for X11");
     }
 
     return {

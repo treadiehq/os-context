@@ -14,4 +14,11 @@ describe("stableStringify", () => {
     expect(out).toContain("\n");
     expect(out).toContain("  ");
   });
+
+  it("handles sparse arrays correctly (holes become null)", () => {
+    const sparseArray = [1, , 3];
+    const result = stableStringify(sparseArray);
+    expect(result).toBe("[1,null,3]");
+    expect(() => JSON.parse(result)).not.toThrow();
+  });
 });

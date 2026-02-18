@@ -44,12 +44,38 @@ tell application "Calendar"
   set d31 to character id 31
   set d30 to character id 30
   set total to (count of eventList)
-  set maxToOutput to 20
+  set maxToOutput to 150
   if total > maxToOutput then set total to maxToOutput
   repeat with i from 1 to total
     set e to item i of eventList
-    set startStr to (start date of e as string)
-    set endStr to (end date of e as string)
+    set startDate to start date of e
+    set y to year of startDate as string
+    set m to (month of startDate as integer)
+    if m < 10 then set mStr to "0" & (m as string) else set mStr to (m as string)
+    set d to day of startDate
+    if d < 10 then set dStr to "0" & (d as string) else set dStr to (d as string)
+    set t to time of startDate
+    set h to (t div 3600)
+    if h < 10 then set hStr to "0" & (h as string) else set hStr to (h as string)
+    set min to ((t mod 3600) div 60)
+    if min < 10 then set minStr to "0" & (min as string) else set minStr to (min as string)
+    set s to (t mod 60)
+    if s < 10 then set sStr to "0" & (s as string) else set sStr to (s as string)
+    set startStr to y & "-" & mStr & "-" & dStr & "T" & hStr & ":" & minStr & ":" & sStr
+    set endDate to end date of e
+    set y to year of endDate as string
+    set m to (month of endDate as integer)
+    if m < 10 then set mStr to "0" & (m as string) else set mStr to (m as string)
+    set d to day of endDate
+    if d < 10 then set dStr to "0" & (d as string) else set dStr to (d as string)
+    set t to time of endDate
+    set h to (t div 3600)
+    if h < 10 then set hStr to "0" & (h as string) else set hStr to (h as string)
+    set min to ((t mod 3600) div 60)
+    if min < 10 then set minStr to "0" & (min as string) else set minStr to (min as string)
+    set s to (t mod 60)
+    if s < 10 then set sStr to "0" & (s as string) else set sStr to (s as string)
+    set endStr to y & "-" & mStr & "-" & dStr & "T" & hStr & ":" & minStr & ":" & sStr
     set sumStr to (summary of e as string)
     set locStr to ""
     try
@@ -93,7 +119,16 @@ function parseCalendarOutput(raw: string): CalendarEvent[] {
       });
     }
   }
-  events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  events.sort((a, b) => {
+    const ta = new Date(a.start).getTime();
+    const tb = new Date(b.start).getTime();
+    const aValid = Number.isFinite(ta);
+    const bValid = Number.isFinite(tb);
+    if (!aValid && !bValid) return 0;
+    if (!aValid) return 1;
+    if (!bValid) return -1;
+    return ta - tb;
+  });
   return events.slice(0, 3);
 }
 

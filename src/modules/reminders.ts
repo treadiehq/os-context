@@ -11,7 +11,6 @@ const REMINDER_SEP = "\x1e";
 const FIELD_SEP = "\x1f";
 
 const REMINDERS_DENIED_PATTERNS = [
-  /reminders/i,
   /permission/i,
   /privacy/i,
   /not authorised/i,

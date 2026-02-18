@@ -14,15 +14,17 @@ tell application "System Events"
   set n to (count of procs)
   if n > ${MAX_APPS} then set n to ${MAX_APPS}
   repeat with i from 1 to n
-    set p to item i of procs
-    set pname to name of p
-    set pid to unix id of p
-    set bid to ""
     try
-      set bid to bundle identifier of p
+      set p to item i of procs
+      set pname to name of p
+      set pid to unix id of p
+      set bid to ""
+      try
+        set bid to bundle identifier of p
+      end try
+      if bid is missing value then set bid to ""
+      set out to out & pname & tab & (pid as string) & tab & bid & return
     end try
-    if bid is missing value then set bid to ""
-    set out to out & pname & tab & (pid as string) & tab & bid & return
   end repeat
   return out
 end tell

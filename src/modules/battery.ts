@@ -33,14 +33,19 @@ async function collectBatteryDarwin(timeoutMs: number): Promise<ModuleResult<Bat
     if (result.timedOut || !result.ok) {
       return {
         data: { percentage: 0, is_charging: false, power_source: "unknown" },
+        error: result.timedOut
+          ? { module: "battery", message: "Timeout", code: "timeout" }
+          : { module: "battery", message: result.stderr.trim() || "Failed to collect battery info", code: "error" },
         timingMs: t.elapsed(),
       };
     }
     const data = parsePmsetBatt(result.stdout);
     return { data, timingMs: t.elapsed() };
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     return {
       data: { percentage: 0, is_charging: false, power_source: "unknown" },
+      error: { module: "battery", message, code: "error" },
       timingMs: t.elapsed(),
     };
   }
@@ -81,9 +86,11 @@ async function collectBatteryLinux(_timeoutMs: number): Promise<ModuleResult<Bat
         : "unknown";
     const data: Battery = { percentage, is_charging, power_source };
     return { data, timingMs: t.elapsed() };
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     return {
       data: { percentage: 0, is_charging: false, power_source: "unknown" },
+      error: { module: "battery", message, code: "error" },
       timingMs: t.elapsed(),
     };
   }

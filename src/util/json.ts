@@ -36,10 +36,11 @@ export function stableStringify(obj: unknown, pretty = false): string {
       stack.push(value);
       const nextIndent = indentUnit ? indentUnit.repeat(depth + 1) : "";
       const currentIndent = indentUnit ? indentUnit.repeat(depth) : "";
-      const items = value.map((item, index) => {
-        const rendered = stringifyValue(item, depth + 1, String(index), true);
-        return rendered === undefined ? "null" : rendered;
-      });
+      const items: string[] = [];
+      for (let i = 0; i < value.length; i++) {
+        const rendered = stringifyValue(value[i], depth + 1, String(i), true);
+        items.push(rendered === undefined ? "null" : rendered);
+      }
       stack.pop();
       if (items.length === 0) return "[]";
       if (!indentUnit) return `[${items.join(",")}]`;

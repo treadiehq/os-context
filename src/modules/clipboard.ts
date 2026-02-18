@@ -37,6 +37,14 @@ async function collectClipboardDarwin(options: CollectOptions): Promise<ModuleRe
   }
 }
 
+/** xclip/xsel stderr when clipboard is empty (no content to read). */
+function isLinuxClipboardEmptyStderr(stderr: string): boolean {
+  const s = (stderr ?? "").toLowerCase();
+  return (
+    /not available|no selection|unable to get|clipboard.*empty|target.*not available|no clipboard owner/i.test(s)
+  );
+}
+
 async function collectClipboardLinux(options: CollectOptions): Promise<ModuleResult<Clipboard>> {
   const t = timer();
   const timeoutMs = options.timeoutMs;
@@ -46,9 +54,27 @@ async function collectClipboardLinux(options: CollectOptions): Promise<ModuleRes
     if (!result.ok) {
       result = await run("xsel", ["--clipboard", "--output"], { timeoutMs });
     }
-    if (!result.ok) {
+    if (result.timedOut) {
       return {
         data: { available: false, types: [] },
+        error: { module: "clipboard", message: "Timeout", code: "timeout" },
+        timingMs: t.elapsed(),
+      };
+    }
+    if (!result.ok) {
+      if (isLinuxClipboardEmptyStderr(result.stderr ?? "")) {
+        return {
+          data: { available: true, types: [] },
+          timingMs: t.elapsed(),
+        };
+      }
+      return {
+        data: { available: false, types: [] },
+        error: {
+          module: "clipboard",
+          message: (result.stderr ?? "").trim() || "Failed to get clipboard",
+          code: "error",
+        },
         timingMs: t.elapsed(),
       };
     }
